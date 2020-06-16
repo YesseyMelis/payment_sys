@@ -8,7 +8,7 @@ docker-compose up
 ```
 docker-compose up --build
 ```
-#Stop docker containers
+# Stop docker containers
 ```
 docker-compose down
 ```
