@@ -8,56 +8,114 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
             name='Blacklist',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
                 ('uin', models.BigIntegerField()),
             ],
-            options={
-                'db_table': 'blacklist',
-            },
+            options={'db_table': 'blacklist',},
         ),
         migrations.CreateModel(
             name='Borrower',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
                 ('uin', models.BigIntegerField()),
                 ('birth_date', models.DateTimeField()),
             ],
-            options={
-                'db_table': 'borrower',
-            },
+            options={'db_table': 'borrower',},
         ),
         migrations.CreateModel(
             name='Program',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('min_sum', models.DecimalField(blank=True, decimal_places=4, max_digits=56, null=True)),
-                ('max_sum', models.DecimalField(blank=True, decimal_places=4, max_digits=56, null=True)),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'min_sum',
+                    models.DecimalField(
+                        blank=True, decimal_places=4, max_digits=56, null=True
+                    ),
+                ),
+                (
+                    'max_sum',
+                    models.DecimalField(
+                        blank=True, decimal_places=4, max_digits=56, null=True
+                    ),
+                ),
                 ('min_age', models.IntegerField(blank=True, null=True)),
                 ('max_age', models.IntegerField(blank=True, null=True)),
             ],
-            options={
-                'db_table': 'programs',
-            },
+            options={'db_table': 'programs',},
         ),
         migrations.CreateModel(
             name='Application',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('sum', models.DecimalField(blank=True, decimal_places=4, max_digits=56, null=True)),
-                ('status', models.CharField(blank=True, choices=[('failure', 0), ('success', 1)], max_length=191, null=True)),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'sum',
+                    models.DecimalField(
+                        blank=True, decimal_places=4, max_digits=56, null=True
+                    ),
+                ),
+                (
+                    'status',
+                    models.CharField(
+                        blank=True,
+                        choices=[('failure', 0), ('success', 1)],
+                        max_length=191,
+                        null=True,
+                    ),
+                ),
                 ('failure_description', models.TextField(blank=True, null=True)),
-                ('borrower', models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='bank.Borrower')),
-                ('program', models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='bank.Program')),
+                (
+                    'borrower',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        to='bank.Borrower',
+                    ),
+                ),
+                (
+                    'program',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        to='bank.Program',
+                    ),
+                ),
             ],
-            options={
-                'db_table': 'applications',
-            },
+            options={'db_table': 'applications',},
         ),
     ]

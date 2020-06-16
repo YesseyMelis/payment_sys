@@ -3,15 +3,19 @@ import json
 import requests
 from rest_framework import serializers
 
-from payment_sys.app.bank.models import Application, Program, Blacklist, Borrower
-from payment_sys.app.utils.exceptions import CustomValidationError
+from app.bank.models import Application, Program, Blacklist, Borrower
+from app.utils.exceptions import CustomValidationError
 from datetime import datetime
 
 
 def get_age(birth):
     current = datetime.now()
     birth_date = datetime.strptime(birth, '%y%m%d')
-    return current.year - birth_date.year - ((current.month, current.day) < (birth_date.month, birth_date.day))
+    return (
+        current.year
+        - birth_date.year
+        - ((current.month, current.day) < (birth_date.month, birth_date.day))
+    )
 
 
 class ApplicationCreateAgeSumValidateSerializer(serializers.Serializer):
@@ -21,11 +25,15 @@ class ApplicationCreateAgeSumValidateSerializer(serializers.Serializer):
     def validate(self, attrs):
         errors = {}
         program = Program.objects.first()
-        age = get_age(attrs.get('uin')[:6])
         if attrs.get('sum') > program.max_sum or attrs.get('sum') < program.min_sum:
             errors["error"] = "Заявка не подходит по сумме"
-        if age > program.max_age or age < program.min_age:
-            errors["error"] = "Заемщик не подходит по возрасту"
+        try:
+            age = get_age(attrs.get('uin')[:6])
+        except ValueError:
+            age = None
+        if age:
+            if age > program.max_age or age < program.min_age:
+                errors["error"] = "Заемщик не подходит по возрасту"
         return errors
 
 
@@ -35,10 +43,12 @@ class ApplicationCreateBusinessValidateSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         errors = {}
-        url = 'https://stat.gov.kz/api/juridical/gov/?bin={}&lang=ru'.format(attrs.get('uin'))
+        url = 'https://stat.gov.kz/api/juridical/gov/?bin={}&lang=ru'.format(
+            attrs.get('uin')
+        )
         response = requests.get(url=url)
         data = json.loads(response.text)
-        if not data.get('success'):
+        if data.get('success'):
             errors['error'] = "иин является ИП"
         return errors
 
@@ -54,26 +64,22 @@ class ApplicationCreateBlacklistValidateSerializer(serializers.Serializer):
         return errors
 
 
-class ApplicationCreateSerializer(serializers.ModelSerializer):
+class ApplicationCreateSerializer(serializers.Serializer):
     uin = serializers.CharField()
     sum = serializers.FloatField()
-
-    class Meta:
-        model = Application
-        fields = '__all__'
 
     def create(self, validated_data):
         program = Program.objects.first()
         uin = validated_data.get('uin')
-        birth_date = datetime.strptime(uin[:6], '%y%m%d')
+        try:
+            birth_date = datetime.strptime(uin[:6], '%y%m%d')
+        except ValueError:
+            birth_date = None
         borrower = Borrower.objects.create(
-            uin=validated_data.get('uin'),
-            birth_date=birth_date
+            uin=validated_data.get('uin'), birth_date=birth_date
         )
         app = Application.objects.create(
-            program=program,
-            borrower=borrower,
-            sum=validated_data.get('sum')
+            program=program, borrower=borrower, sum=validated_data.get('sum')
         )
         age_sum_ser = ApplicationCreateAgeSumValidateSerializer(data=validated_data)
         age_sum_ser.is_valid(raise_exception=False)
@@ -91,7 +97,9 @@ class ApplicationCreateSerializer(serializers.ModelSerializer):
             app.failure_description = error
             app.save()
             raise CustomValidationError(error, 404)
-        blacklist_ser = ApplicationCreateBlacklistValidateSerializer(data=validated_data)
+        blacklist_ser = ApplicationCreateBlacklistValidateSerializer(
+            data=validated_data
+        )
         blacklist_ser.is_valid(raise_exception=False)
         if blacklist_ser.validated_data:
             error = blacklist_ser.validated_data.get('error')
